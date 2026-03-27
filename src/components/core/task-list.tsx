@@ -1,13 +1,12 @@
 import Plus from "../../assets/icons/plus.svg?react";
-import useTasks from "../../hooks/use-tasks";
-import useTask from "../../hooks/use-task";
 import Button from "../button";
 import TaskItem from "./task-item";
 import { TASK_STATE } from "../../models/task";
+import Skeleton from "../skeleton";
+import { useTasksContext } from "../../contexts/tasks-context";
 
 export default function TaskList() {
-  const { tasks } = useTasks();
-  const { prepareTask } = useTask();
+  const { tasks, isLoading, prepareTask } = useTasksContext();
 
   function handleCreateTask() {
     prepareTask();
@@ -26,9 +25,11 @@ export default function TaskList() {
         </Button>
       </section>
       <section className="space-y-2">
-        {tasks.map((task) => (
-          <TaskItem key={task.id} task={task} />
-        ))}
+        {isLoading
+          ? Array.from({ length: 3 }).map((_, index) => (
+              <Skeleton key={index} className="h-16 w-full rounded-lg" />
+            ))
+          : tasks.map((task) => <TaskItem key={task.id} task={task} />)}
       </section>
     </>
   );
