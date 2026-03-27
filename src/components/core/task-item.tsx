@@ -16,14 +16,15 @@ import { cx } from "class-variance-authority";
 import z from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import useTask from "../../hooks/use-task";
+import { useTasksContext } from "../../contexts/tasks-context";
 
 interface TaskItemProps {
   task: Task;
 }
 
 export default function TaskItem({ task }: TaskItemProps) {
-  const { updateTask, updateTaskStatus, deleteTask } = useTask();
+  const { updateTask, updateTaskStatus, deleteTask, isTaskUpdating } = useTasksContext();
+  const isUpdating = isTaskUpdating(task.id);
 
   const [isEditing, setIsEditing] = React.useState(
     task.state === TASK_STATE.CREATING,
@@ -48,7 +49,7 @@ export default function TaskItem({ task }: TaskItemProps) {
 
   const handleExitEditMode = () => {
     if (task.state === TASK_STATE.CREATING) {
-      deleteTask(task.id);
+      void deleteTask(task.id);
     }
 
     setIsEditing(false);
@@ -59,11 +60,11 @@ export default function TaskItem({ task }: TaskItemProps) {
   };
 
   const handleChangedTaskStatus = () => {
-    updateTaskStatus(task.id, !task.concluded);
+    void updateTaskStatus(task.id, !task.concluded);
   };
 
-  const handleSaveTask = (data: FormValues) => {
-    updateTask(task.id, { title: data.title });
+  const handleSaveTask = async (data: FormValues) => {
+    await updateTask(task.id, { title: data.title });
     setIsEditing(false);
   };
 
@@ -74,6 +75,7 @@ export default function TaskItem({ task }: TaskItemProps) {
           <Checkbox
             value={task?.concluded?.toString()}
             checked={task.concluded}
+            disabled={isUpdating}
             onChange={handleChangedTaskStatus}
           />
           <Text className={cx("flex-1", task.concluded && "line-through")}>
@@ -83,11 +85,15 @@ export default function TaskItem({ task }: TaskItemProps) {
             <ButtonIcon
               icon={Trash}
               variant="tertiary"
-              onClick={() => deleteTask(task.id)}
+              disabled={isUpdating}
+              onClick={() => {
+                void deleteTask(task.id);
+              }}
             />
             <ButtonIcon
               icon={Pencil}
               variant="tertiary"
+              disabled={isUpdating}
               onClick={handleEditClick}
             />
           </div>
@@ -102,6 +108,7 @@ export default function TaskItem({ task }: TaskItemProps) {
             className="flex-1"
             required
             autoFocus
+            disabled={isUpdating}
             onChange={handleTextChange}
           />
           <div className="flex gap-1">
@@ -109,9 +116,15 @@ export default function TaskItem({ task }: TaskItemProps) {
               type="button"
               icon={X}
               variant="secondary"
+              disabled={isUpdating}
               onClick={handleExitEditMode}
             />
-            <ButtonIcon type="submit" icon={Check} variant="primary" />
+            <ButtonIcon
+              type="submit"
+              icon={Check}
+              variant="primary"
+              disabled={isUpdating}
+            />
           </div>
         </form>
       )}

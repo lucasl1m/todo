@@ -1,6 +1,4 @@
 
-export const TASKS_KEY = '@todo:tasks';
-
 export const TASK_STATE = {
   CREATING: 'creating',
   CREATED: 'created',

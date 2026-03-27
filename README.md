@@ -1,75 +1,107 @@
-# React + TypeScript + Vite
+# Todo App (React + Vite + Vercel Functions + Prisma)
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Aplicacao de tarefas com frontend em React e backend serverless em `api/` com CRUD completo.
 
-Currently, two official plugins are available:
+## Stack
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+- React + Vite + TypeScript
+- Vercel Functions (`api/tasks`)
+- Prisma ORM
+- PostgreSQL (recomendado: Vercel Postgres no plano free)
 
-## React Compiler
+## O que foi implementado
 
-The React Compiler is enabled on this template. See [this documentation](https://react.dev/learn/react-compiler) for more information.
+- Banco de dados com Prisma (`prisma/schema.prisma`)
+- Endpoints CRUD:
+  - `GET /api/tasks`
+  - `POST /api/tasks`
+  - `PATCH /api/tasks/:id`
+  - `DELETE /api/tasks/:id`
+- Integracao do frontend via contexto (`TasksProvider`) consumindo API
+- Remocao de `localStorage`
+- Loading com `Skeleton` antes de exibir tarefas
 
-Note: This will impact Vite dev & build performances.
+## Configuracao local
 
-## Expanding the ESLint configuration
+1. Instale dependencias:
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
-
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```bash
+pnpm install
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+2. Crie o arquivo `.env` com base em `.env.example`:
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
-
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```bash
+cp .env.example .env
 ```
+
+3. Configure `DATABASE_URL` com sua conexao PostgreSQL.
+
+4. Gere o client Prisma e aplique o schema:
+
+```bash
+pnpm prisma:generate
+pnpm prisma:push
+```
+
+5. Rode a aplicacao:
+
+```bash
+pnpm dev
+```
+
+## Teste local com Docker
+
+Este projeto inclui `docker-compose.yml` para subir o PostgreSQL local.
+
+1. Suba o banco:
+
+```bash
+pnpm docker:up
+```
+
+2. Garanta que o `.env` tenha a URL local (igual ao `.env.example`):
+
+```env
+DATABASE_URL="postgresql://postgres:postgres@localhost:5432/todo?schema=public"
+```
+
+3. Sincronize o schema no banco do container:
+
+```bash
+pnpm prisma:push
+```
+
+4. Para testar frontend + endpoints `/api` juntos localmente, rode com Vercel CLI:
+
+```bash
+pnpm dlx vercel dev
+```
+
+5. Para parar os containers:
+
+```bash
+pnpm docker:down
+```
+
+## Deploy na Vercel com banco free
+
+1. Crie um projeto na Vercel a partir deste repositorio.
+2. No dashboard da Vercel, adicione **Vercel Postgres** (free).
+3. Defina a variavel `DATABASE_URL` no projeto da Vercel com a URL do Postgres.
+4. Em cada deploy, o `postinstall` ja executa `prisma generate` automaticamente.
+5. Antes do primeiro deploy em producao, rode o schema no banco de producao:
+
+```bash
+pnpm prisma:push
+```
+
+## Scripts
+
+- `pnpm dev` inicia ambiente local
+- `pnpm build` gera build de producao
+- `pnpm lint` valida codigo
+- `pnpm prisma:generate` gera Prisma Client
+- `pnpm prisma:push` sincroniza schema com banco
+- `pnpm docker:up` sobe ambiente Docker local
+- `pnpm docker:down` derruba ambiente Docker local
